@@ -1,0 +1,36 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+    char cipher[2000], plain[2000];
+    char from[128], to[128];
+    int i, j;
+
+    printf("Enter ciphertext (one line):\n");
+    if (!fgets(cipher, sizeof(cipher), stdin)) return 1;
+
+    printf("Enter mapped ciphertext symbols (e.g. abc): ");
+    scanf("%127s", from);
+    printf("Enter corresponding plaintext letters: ");
+    scanf("%127s", to);
+
+    if (strlen(from) != strlen(to)) {
+        printf("The two mapping strings must have equal length.\n");
+        return 1;
+    }
+
+    for (i = 0; cipher[i] != '\0'; i++) {
+        plain[i] = cipher[i];
+        for (j = 0; from[j] != '\0'; j++) {
+            if (cipher[i] == from[j]) {
+                plain[i] = to[j];
+                break;
+            }
+        }
+    }
+    plain[i] = '\0';
+
+    printf("Decrypted text: %s", plain);
+    return 0;
+}
+

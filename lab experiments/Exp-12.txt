@@ -1,0 +1,54 @@
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int main(void) {
+    char input[] = "meet me at the usual place at ten rather than eight oclock";
+    char p[200], c[200], d[200];
+    int n = 0, i, x, y, a, b;
+
+    /* Remove spaces and non-alphabetic characters */
+    for (i = 0; input[i]; i++)
+        if (isalpha((unsigned char)input[i]))
+            p[n++] = toupper((unsigned char)input[i]);
+
+    if (n % 2) p[n++] = 'X';
+    p[n] = '\0';
+
+    /* Encryption: K = [9 4; 5 7] */
+    for (i = 0; i < n; i += 2) {
+        x = p[i] - 'A';
+        y = p[i + 1] - 'A';
+
+        a = (9 * x + 4 * y) % 26;
+        b = (5 * x + 7 * y) % 26;
+
+        c[i] = a + 'A';
+        c[i + 1] = b + 'A';
+    }
+    c[n] = '\0';
+
+    /*
+       det(K) = 9*7 - 4*5 = 43 = 17 (mod 26).
+       17 inverse mod 26 = 23.
+       K inverse = [5 12; 9 25] (mod 26).
+    */
+    for (i = 0; i < n; i += 2) {
+        x = c[i] - 'A';
+        y = c[i + 1] - 'A';
+
+        a = (5 * x + 12 * y) % 26;
+        b = (9 * x + 25 * y) % 26;
+
+        d[i] = a + 'A';
+        d[i + 1] = b + 'A';
+    }
+    d[n] = '\0';
+
+    printf("Plaintext : %s\n", p);
+    printf("Ciphertext: %s\n", c);
+    printf("Decrypted : %s\n", d);
+
+    return 0;
+}

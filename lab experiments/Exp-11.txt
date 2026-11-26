@@ -1,0 +1,27 @@
+
+#include <stdio.h>
+#include <math.h>
+
+int main(void) {
+    double log2_total = 0.0;
+    double log2_unique;
+    int i;
+
+    /* Total keys = 25! */
+    for (i = 1; i <= 25; i++)
+        log2_total += log2((double)i);
+
+    /*
+       Equivalent Playfair keys:
+       each key has 25 cyclic shifts of its square
+       that give equivalent encryption results.
+    */
+    log2_unique = log2_total - log2(25.0);
+
+    printf("Total possible keys = 25!\n");
+    printf("Total keys approximately = 2^%.2f\n", log2_total);
+    printf("Effectively unique keys approximately = 2^%.2f\n",
+           log2_unique);
+
+    return 0;
+}
