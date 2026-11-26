@@ -1,0 +1,19 @@
+#include <stdio.h>
+
+int main() {
+    int state=1600;
+    int rate=1024;
+
+    int capacity=state-rate;
+    int lanes=capacity/64;
+
+    printf("State size: %d bits\n",state);
+    printf("Rate: %d bits\n",rate);
+    printf("Capacity: %d bits\n",capacity);
+    printf("Capacity lanes: %d\n",lanes);
+
+    printf("Ignoring permutation, capacity lanes remain zero.\n");
+    printf("Time until all become nonzero: Never.\n");
+
+    return 0;
+}

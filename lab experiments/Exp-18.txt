@@ -1,0 +1,47 @@
+#include <stdio.h>
+
+#include <stdint.h>
+
+ 
+
+static uint32_t rot28(uint32_t x, int s) {
+
+    x &= 0x0FFFFFFF;
+
+    return ((x << s) | (x >> (28 - s))) & 0x0FFFFFFF;
+
+}
+
+ 
+
+int main(void) {
+
+    const int shifts[16] =
+
+        {1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1};
+
+    uint32_t C = 0x0ABCDEFL & 0x0FFFFFFF;
+
+    uint32_t D = 0x0123456L & 0x0FFFFFFF;
+
+    int r;
+
+ 
+
+    printf("Round  C (28 bits)  D (28 bits)  selected bits: 24 + 24\n");
+
+    for (r = 0; r < 16; r++) {
+
+        C = rot28(C, shifts[r]);
+
+        D = rot28(D, shifts[r]);
+
+        printf("%2d     %07X       %07X       24 from C, 24 from D\n",
+
+               r + 1, C, D);
+
+    }
+
+    return 0;
+
+}

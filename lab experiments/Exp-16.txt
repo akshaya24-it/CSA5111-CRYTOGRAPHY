@@ -1,0 +1,215 @@
+#include <stdio.h>
+
+#include <string.h>
+
+#include <ctype.h>
+
+#include <stdlib.h>
+
+#include <time.h>
+
+ 
+
+#define MAX 3000
+
+#define TRIALS 80
+
+ 
+
+const double freq[26] = {
+
+  8.167,1.492,2.782,4.253,12.702,2.228,2.015,6.094,6.966,
+
+  0.153,0.772,4.025,2.406,6.749,7.507,1.929,0.095,5.987,
+
+  6.327,9.056,2.758,0.978,2.360,0.150,1.974,0.074
+
+};
+
+ 
+
+typedef struct { double score; char text[MAX]; char key[27]; } Candidate;
+
+ 
+
+static void shuffle(char key[27]) {
+
+    int i, j; char t;
+
+    for (i = 0; i < 26; i++) key[i] = (char)('A' + i);
+
+    for (i = 25; i > 0; i--) {
+
+        j = rand() % (i + 1);
+
+        t = key[i]; key[i] = key[j]; key[j] = t;
+
+    }
+
+    key[26] = '\0';
+
+}
+
+ 
+
+static void decrypt(const char *ct, const char key[27], char *out) {
+
+    int i;
+
+    for (i = 0; ct[i]; i++) {
+
+        if (isalpha((unsigned char)ct[i])) {
+
+            int x = toupper((unsigned char)ct[i]) - 'A';
+
+            char ch = key[x];
+
+            out[i] = islower((unsigned char)ct[i]) ? (char)tolower(ch) : ch;
+
+        } else out[i] = ct[i];
+
+    }
+
+    out[i] = '\0';
+
+}
+
+ 
+
+/* Frequency score: lower is better */
+
+static double score_text(const char *s) {
+
+    int count[26] = {0}, n = 0, i;
+
+    double score = 0.0, expected, diff;
+
+    for (i = 0; s[i]; i++) if (isalpha((unsigned char)s[i])) {
+
+        count[toupper((unsigned char)s[i]) - 'A']++; n++;
+
+    }
+
+    if (!n) return 1e9;
+
+    for (i = 0; i < 26; i++) {
+
+        expected = n * freq[i] / 100.0;
+
+        diff = count[i] - expected;
+
+        if (expected > 0) score += diff * diff / expected;
+
+    }
+
+    return score;
+
+}
+
+ 
+
+int main(void) {
+
+    char ct[MAX], bestText[MAX], trialText[MAX], key[27], bestKey[27];
+
+    Candidate candidates[TRIALS];
+
+    int top, n = 0, i, j, t, a, b;
+
+    double best, current, newScore;
+
+    char temp;
+
+ 
+
+    printf("Enter ciphertext: ");
+
+    if (!fgets(ct, sizeof(ct), stdin)) return 1;
+
+    printf("Number of candidates (1-%d): ", TRIALS);
+
+    if (scanf("%d", &top) != 1 || top < 1 || top > TRIALS) {
+
+        printf("Invalid candidate count.\n"); return 1;
+
+    }
+
+    for (i = 0; ct[i]; i++) if (isalpha((unsigned char)ct[i])) n++;
+
+    if (n == 0) { printf("Ciphertext has no letters.\n"); return 1; }
+
+ 
+
+    srand((unsigned)time(NULL));
+
+    for (t = 0; t < TRIALS; t++) {
+
+        shuffle(key);
+
+        decrypt(ct, key, trialText);
+
+        current = score_text(trialText);
+
+ 
+
+        /* Greedy key-swap search */
+
+        for (j = 0; j < 1200; j++) {
+
+            a = rand() % 26; b = rand() % 26;
+
+            temp = key[a]; key[a] = key[b]; key[b] = temp;
+
+            decrypt(ct, key, trialText);
+
+            newScore = score_text(trialText);
+
+            if (newScore <= current) current = newScore;
+
+            else { temp = key[a]; key[a] = key[b]; key[b] = temp; }
+
+        }
+
+ 
+
+        decrypt(ct, key, trialText);
+
+        current = score_text(trialText);
+
+        strcpy(candidates[t].text, trialText);
+
+        strcpy(candidates[t].key, key);
+
+        candidates[t].score = current;
+
+    }
+
+ 
+
+    /* Sort candidate runs by score */
+
+    for (i = 0; i < TRIALS; i++)
+
+        for (j = i + 1; j < TRIALS; j++)
+
+            if (candidates[j].score < candidates[i].score) {
+
+                Candidate tmp = candidates[i];
+
+                candidates[i] = candidates[j]; candidates[j] = tmp;
+
+            }
+
+ 
+
+    printf("\nTop %d candidates (lower score is better):\n", top);
+
+    for (i = 0; i < top; i++)
+
+        printf("%d. Score %.2f: %s\n", i + 1,
+
+               candidates[i].score, candidates[i].text);
+
+    return 0;
+
+}

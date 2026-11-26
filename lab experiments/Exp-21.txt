@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <string.h>
+#include <openssl/evp.h>
+
+#define BS 16
+
+void test(const EVP_CIPHER *alg, const char *name,
+          unsigned char *key, unsigned char *iv,
+          unsigned char *msg, int len) {
+    unsigned char in[256], out[272], back[272];
+    int n = ((len / BS) + 1) * BS;
+    int a = 0, b = 0, c = 0, d = 0, raw;
+
+    memcpy(in, msg, len);
+    in[len] = 0x80;
+    memset(in + len + 1, 0, n - len - 1);
+
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
+    EVP_EncryptInit_ex(ctx, alg, NULL, key, iv);
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
+    EVP_EncryptUpdate(ctx, out, &a, in, n);
+    EVP_EncryptFinal_ex(ctx, out + a, &b);
+
+    EVP_DecryptInit_ex(ctx, alg, NULL, key, iv);
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
+    EVP_DecryptUpdate(ctx, back, &c, out, a + b);
+    EVP_DecryptFinal_ex(ctx, back + c, &d);
+
+    raw = c + d - 1;
+    while (raw >= 0 && back[raw] == 0)
+        raw--;
+
+    if (raw >= 0 && back[raw] == 0x80)
+        raw--;
+
+    printf("%s Ciphertext: ", name);
+    for (int i = 0; i < a + b; i++)
+        printf("%02X", out[i]);
+
+    printf("\nRecovered: %.*s\n", raw + 1, back);
+
+    EVP_CIPHER_CTX_free(ctx);
+}
+
+int main() {
+    unsigned char key[16] = "0123456789ABCDEF";
+    unsigned char iv[16] = "FEDCBA9876543210";
+    unsigned char msg[] = "Cryptography modes";
+
+    test(EVP_aes_128_ecb(), "ECB", key, NULL, msg, strlen((char *)msg));
+    test(EVP_aes_128_cbc(), "CBC", key, iv, msg, strlen((char *)msg));
+    test(EVP_aes_128_cfb128(), "CFB", key, iv, msg, strlen((char *)msg));
+
+    return 0;
+}

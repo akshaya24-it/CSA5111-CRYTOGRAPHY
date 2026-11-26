@@ -1,0 +1,144 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX 2000
+#define TRIALS 50
+
+const double freq[26] = {
+    8.167,1.492,2.782,4.253,12.702,2.228,
+    2.015,6.094,6.966,0.153,0.772,4.025,
+    2.406,6.749,7.507,1.929,0.095,5.987,
+    6.327,9.056,2.758,0.978,2.360,0.150,
+    1.974,0.074
+};
+
+typedef struct {
+    double score;
+    char text[MAX];
+} Candidate;
+
+void shuffle(char key[]) {
+    for (int i = 0; i < 26; i++)
+        key[i] = 'A' + i;
+
+    for (int i = 25; i > 0; i--) {
+        int j = rand() % (i + 1);
+
+        char t = key[i];
+        key[i] = key[j];
+        key[j] = t;
+    }
+
+    key[26] = '\0';
+}
+
+void decrypt(char ct[], char key[], char out[]) {
+    for (int i = 0; ct[i]; i++) {
+        if (isalpha((unsigned char)ct[i])) {
+            int x = toupper((unsigned char)ct[i]) - 'A';
+            char ch = key[x];
+
+            out[i] = islower((unsigned char)ct[i])
+                     ? tolower(ch) : ch;
+        }
+        else
+            out[i] = ct[i];
+    }
+
+    out[strlen(ct)] = '\0';
+}
+
+double score_text(char text[]) {
+    int count[26] = {0};
+    int n = 0;
+
+    for (int i = 0; text[i]; i++) {
+        if (isalpha((unsigned char)text[i])) {
+            count[toupper((unsigned char)text[i]) - 'A']++;
+            n++;
+        }
+    }
+
+    double score = 0;
+
+    for (int i = 0; i < 26; i++) {
+        double expected = n * freq[i] / 100.0;
+
+        if (expected > 0) {
+            double diff = count[i] - expected;
+            score += diff * diff / expected;
+        }
+    }
+
+    return score;
+}
+
+int main() {
+    char cipher[MAX], key[27], text[MAX];
+    Candidate c[TRIALS];
+
+    int top;
+
+    printf("Enter ciphertext: ");
+    fgets(cipher, sizeof(cipher), stdin);
+
+    printf("Enter number of candidates: ");
+    scanf("%d", &top);
+
+    if (top < 1 || top > TRIALS) {
+        printf("Enter a number from 1 to 50.\n");
+        return 1;
+    }
+
+    srand(time(NULL));
+
+    for (int t = 0; t < TRIALS; t++) {
+        shuffle(key);
+        decrypt(cipher, key, text);
+
+        double current = score_text(text);
+
+        for (int j = 0; j < 1000; j++) {
+            int a = rand() % 26;
+            int b = rand() % 26;
+
+            char temp = key[a];
+            key[a] = key[b];
+            key[b] = temp;
+
+            decrypt(cipher, key, text);
+            double next = score_text(text);
+
+            if (next <= current)
+                current = next;
+            else {
+                temp = key[a];
+                key[a] = key[b];
+                key[b] = temp;
+            }
+        }
+
+        decrypt(cipher, key, c[t].text);
+        c[t].score = score_text(c[t].text);
+    }
+
+    for (int i = 0; i < TRIALS; i++) {
+        for (int j = i + 1; j < TRIALS; j++) {
+            if (c[j].score < c[i].score) {
+                Candidate temp = c[i];
+                c[i] = c[j];
+                c[j] = temp;
+            }
+        }
+    }
+
+    printf("\nTop %d possible plaintexts:\n", top);
+
+    for (int i = 0; i < top; i++)
+        printf("%d. %s\n", i + 1, c[i].text);
+
+    return 0;
+}

@@ -1,0 +1,11 @@
+#include <stdio.h>
+
+int main() {
+    printf("Old RSA private key is compromised.\n");
+    printf("Old modulus must not be reused.\n");
+    printf("Generate new prime numbers p and q.\n");
+    printf("Calculate a new modulus n = p * q.\n");
+    printf("Generate a new public and private key pair.\n");
+
+    return 0;
+}

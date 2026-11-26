@@ -1,0 +1,71 @@
+#include <stdio.h>
+
+#include <string.h>
+
+#include <openssl/evp.h>
+
+ 
+
+int main(void) {
+
+    unsigned char key[24] = "0123456789abcdefghijklmn";
+
+    unsigned char iv[8] = "12345678";
+
+    unsigned char plaintext[] = "CBC mode example using Triple DES";
+
+    unsigned char ciphertext[256];
+
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
+    int out1 = 0, out2 = 0;
+
+ 
+
+    if (!ctx) {
+
+        printf("Context allocation failed.\n");
+
+        return 1;
+
+    }
+
+ 
+
+    if (EVP_EncryptInit_ex(ctx, EVP_des_ede3_cbc(),
+
+                           NULL, key, iv) != 1 ||
+
+        EVP_EncryptUpdate(ctx, ciphertext, &out1,
+
+                          plaintext, (int)strlen((char *)plaintext)) != 1 ||
+
+        EVP_EncryptFinal_ex(ctx, ciphertext + out1, &out2) != 1) {
+
+        printf("Encryption failed; check OpenSSL 3DES support.\n");
+
+        EVP_CIPHER_CTX_free(ctx);
+
+        return 1;
+
+    }
+
+ 
+
+    printf("Plaintext: %s\n", plaintext);
+
+    printf("Ciphertext (%d bytes): ", out1 + out2);
+
+    for (int i = 0; i < out1 + out2; i++)
+
+        printf("%02X", ciphertext[i]);
+
+    printf("\n");
+
+ 
+
+    EVP_CIPHER_CTX_free(ctx);
+
+    return 0;
+
+}

@@ -1,0 +1,48 @@
+#include <stdio.h>
+
+int main() {
+    int key[2][2] = {
+        {9, 4},
+        {5, 7}
+    };
+
+    int plaintext[2][2] = {
+        {1, 0},
+        {0, 1}
+    };
+
+    int ciphertext[2][2];
+
+    printf("Chosen plaintext pairs: BA and AB\n");
+
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            ciphertext[i][j] = 0;
+
+            for (int k = 0; k < 2; k++)
+                ciphertext[i][j] +=
+                    key[i][k] * plaintext[k][j];
+
+            ciphertext[i][j] %= 26;
+        }
+    }
+
+    printf("Ciphertext of BA: %c%c\n",
+           ciphertext[0][0] + 'A',
+           ciphertext[1][0] + 'A');
+
+    printf("Ciphertext of AB: %c%c\n",
+           ciphertext[0][1] + 'A',
+           ciphertext[1][1] + 'A');
+
+    printf("\nRecovered Key Matrix:\n");
+
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++)
+            printf("%d ", ciphertext[i][j]);
+
+        printf("\n");
+    }
+
+    return 0;
+}

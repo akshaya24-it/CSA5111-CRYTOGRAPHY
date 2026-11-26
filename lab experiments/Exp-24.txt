@@ -1,0 +1,39 @@
+#include <stdio.h>
+
+int main() {
+    int n=3599,e=31,p=0,q=0,phi;
+
+    for(int i=2;i*i<=n;i++) {
+        if(n%i==0) {
+            p=i;
+            q=n/i;
+            break;
+        }
+    }
+
+    phi=(p-1)*(q-1);
+
+    int t=0,nt=1,r=phi,nr=e;
+
+    while(nr) {
+        int z=r/nr;
+        int temp=t-z*nt;
+
+        t=nt;
+        nt=temp;
+
+        temp=r-z*nr;
+        r=nr;
+        nr=temp;
+    }
+
+    int d=t%phi;
+    if(d<0)
+        d+=phi;
+
+    printf("p=%d\nq=%d\n",p,q);
+    printf("Phi(n)=%d\n",phi);
+    printf("Private key d=%d\n",d);
+
+    return 0;
+}

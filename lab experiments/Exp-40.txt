@@ -1,0 +1,139 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX 2000
+#define TRIALS 50
+
+double english[26] = {
+    8.167,1.492,2.782,4.253,12.702,2.228,
+    2.015,6.094,6.966,0.153,0.772,4.025,
+    2.406,6.749,7.507,1.929,0.095,5.987,
+    6.327,9.056,2.758,0.978,2.360,0.150,
+    1.974,0.074
+};
+
+typedef struct {
+    double score;
+    char text[MAX];
+} Result;
+
+void make_key(char key[]) {
+    for (int i = 0; i < 26; i++)
+        key[i] = 'A' + i;
+
+    for (int i = 25; i > 0; i--) {
+        int j = rand() % (i + 1);
+        char temp = key[i];
+        key[i] = key[j];
+        key[j] = temp;
+    }
+}
+
+void decrypt(char cipher[], char key[], char output[]) {
+    for (int i = 0; cipher[i]; i++) {
+        if (isalpha((unsigned char)cipher[i])) {
+            int x = toupper((unsigned char)cipher[i]) - 'A';
+            output[i] = islower((unsigned char)cipher[i])
+                        ? tolower(key[x]) : key[x];
+        }
+        else
+            output[i] = cipher[i];
+    }
+
+    output[strlen(cipher)] = '\0';
+}
+
+double calculate_score(char text[]) {
+    int count[26] = {0};
+    int total = 0;
+
+    for (int i = 0; text[i]; i++) {
+        if (isalpha((unsigned char)text[i])) {
+            count[toupper((unsigned char)text[i]) - 'A']++;
+            total++;
+        }
+    }
+
+    double score = 0;
+
+    for (int i = 0; i < 26; i++) {
+        double expected = total * english[i] / 100.0;
+
+        if (expected > 0) {
+            double diff = count[i] - expected;
+            score += diff * diff / expected;
+        }
+    }
+
+    return score;
+}
+
+int main() {
+    char cipher[MAX], key[27], text[MAX];
+    Result results[TRIALS];
+    int top;
+
+    printf("Enter ciphertext: ");
+    fgets(cipher, MAX, stdin);
+
+    printf("Enter number of top plaintexts: ");
+    scanf("%d", &top);
+
+    if (top < 1 || top > TRIALS) {
+        printf("Invalid number of candidates.\n");
+        return 1;
+    }
+
+    srand((unsigned int)time(NULL));
+
+    for (int t = 0; t < TRIALS; t++) {
+        make_key(key);
+        decrypt(cipher, key, text);
+
+        double best = calculate_score(text);
+
+        for (int j = 0; j < 1000; j++) {
+            int a = rand() % 26;
+            int b = rand() % 26;
+
+            char temp = key[a];
+            key[a] = key[b];
+            key[b] = temp;
+
+            decrypt(cipher, key, text);
+
+            double new_score = calculate_score(text);
+
+            if (new_score <= best)
+                best = new_score;
+            else {
+                temp = key[a];
+                key[a] = key[b];
+                key[b] = temp;
+            }
+        }
+
+        decrypt(cipher, key, results[t].text);
+        results[t].score = calculate_score(results[t].text);
+    }
+
+    for (int i = 0; i < TRIALS; i++) {
+        for (int j = i + 1; j < TRIALS; j++) {
+            if (results[j].score < results[i].score) {
+                Result temp = results[i];
+                results[i] = results[j];
+                results[j] = temp;
+            }
+        }
+    }
+
+    printf("\nTop %d possible plaintexts:\n", top);
+
+    for (int i = 0; i < top; i++)
+        printf("%d. %s\n", i + 1, results[i].text);
+
+    return 0;
+}

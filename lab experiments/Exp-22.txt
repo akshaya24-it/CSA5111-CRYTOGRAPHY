@@ -1,0 +1,154 @@
+#include <stdio.h>
+
+int P10[]={3,5,2,7,4,10,1,9,8,6};
+int P8[]={6,3,7,4,8,5,10,9};
+int IP[]={2,6,3,1,4,8,5,7};
+int IPi[]={4,1,3,5,7,2,8,6};
+int EP[]={4,1,2,3,2,3,4,1};
+int P4[]={2,4,3,1};
+
+int S0[4][4]={{1,0,3,2},{3,2,1,0},
+              {0,2,1,3},{3,1,3,2}};
+int S1[4][4]={{0,1,2,3},{2,0,1,3},
+              {3,0,1,0},{2,1,0,3}};
+
+void perm(int *a,int *b,int *p,int n) {
+    for(int i=0;i<n;i++)
+        b[i]=a[p[i]-1];
+}
+
+void keys(int *k,int *k1,int *k2) {
+    int t[10],l[5],r[5],u[10];
+    perm(k,t,P10,10);
+
+    for(int i=0;i<5;i++) {
+        l[i]=t[i];
+        r[i]=t[i+5];
+    }
+
+    for(int i=0;i<5;i++) {
+        l[i]=l[(i+1)%5];
+        r[i]=r[(i+1)%5];
+    }
+
+    for(int i=0;i<5;i++) {
+        u[i]=l[i];
+        u[i+5]=r[i];
+    }
+
+    perm(u,k1,P8,8);
+
+    for(int z=0;z<2;z++) {
+        for(int i=0;i<5;i++) {
+            l[i]=l[(i+2)%5];
+            r[i]=r[(i+2)%5];
+        }
+    }
+
+    for(int i=0;i<5;i++) {
+        u[i]=l[i];
+        u[i+5]=r[i];
+    }
+
+    perm(u,k2,P8,8);
+}
+
+int bitsval(int *a,int n) {
+    int v=0;
+    for(int i=0;i<n;i++)
+        v=(v<<1)|a[i];
+    return v;
+}
+
+void valbits(int v,int *a,int n) {
+    for(int i=n-1;i>=0;i--) {
+        a[i]=v&1;
+        v>>=1;
+    }
+}
+
+void fk(int *b,int *k) {
+    int l[4],r[4],e[8],x[8],p[4],s[4];
+    int row,col;
+
+    for(int i=0;i<4;i++) {
+        l[i]=b[i];
+        r[i]=b[i+4];
+    }
+
+    perm(r,e,EP,8);
+
+    for(int i=0;i<8;i++)
+        x[i]=e[i]^k[i];
+
+    row=x[0]*2+x[3];
+    col=x[1]*2+x[2];
+    valbits(S0[row][col],s,2);
+
+    row=x[4]*2+x[7];
+    col=x[5]*2+x[6];
+    valbits(S1[row][col],s+2,2);
+
+    perm(s,p,P4,4);
+
+    for(int i=0;i<4;i++)
+        b[i]=l[i]^p[i];
+
+    for(int i=0;i<4;i++)
+        b[i+4]=r[i];
+}
+
+int sd(int v,int *k1,int *k2,int dec) {
+    int b[8],t[8],u[8];
+
+    valbits(v,b,8);
+    perm(b,t,IP,8);
+
+    fk(t,dec?k2:k1);
+
+    for(int i=0;i<4;i++) {
+        int z=t[i];
+        t[i]=t[i+4];
+        t[i+4]=z;
+    }
+
+    fk(t,dec?k1:k2);
+    perm(t,u,IPi,8);
+
+    return bitsval(u,8);
+}
+
+int main() {
+    int key[10]={0,1,1,1,1,1,1,1,0,1};
+    int k1[8],k2[8];
+
+    int iv=0xAA;
+    int p[]={0x00,0x01,0x12,0x23};
+    int c[4],d[4],prev;
+
+    keys(key,k1,k2);
+
+    prev=iv;
+
+    for(int i=0;i<4;i++) {
+        c[i]=sd(p[i]^prev,k1,k2,0);
+        prev=c[i];
+    }
+
+    printf("Ciphertext: ");
+    for(int i=0;i<4;i++)
+        printf("%02X ",c[i]);
+
+    prev=iv;
+
+    for(int i=0;i<4;i++) {
+        d[i]=sd(c[i],k1,k2,1)^prev;
+        prev=c[i];
+    }
+
+    printf("\nDecrypted: ");
+    for(int i=0;i<4;i++)
+        printf("%02X ",d[i]);
+
+    return 0;
+}

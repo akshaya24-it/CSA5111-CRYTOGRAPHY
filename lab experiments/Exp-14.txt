@@ -1,0 +1,41 @@
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int main(void) {
+    char plaintext[] = "send more money";
+    char target[] = "cash not needed";
+    int key[] = {9, 0, 1, 7, 23, 15, 21,
+                 14, 11, 11, 2, 8, 9};
+    char p[100], t[100], cipher[100];
+    int n = 0, m = 0, i, k;
+
+    for (i = 0; plaintext[i]; i++)
+        if (isalpha((unsigned char)plaintext[i]))
+            p[n++] = toupper((unsigned char)plaintext[i]);
+
+    for (i = 0; target[i]; i++)
+        if (isalpha((unsigned char)target[i]))
+            t[m++] = toupper((unsigned char)target[i]);
+
+    if (n != 13 || m != 13) {
+        printf("Both messages must contain 13 letters.\n");
+        return 1;
+    }
+
+    for (i = 0; i < n; i++)
+        cipher[i] = ((p[i] - 'A' + key[i]) % 26) + 'A';
+    cipher[n] = '\0';
+
+    printf("Ciphertext: %s\n", cipher);
+    printf("Key for target plaintext: ");
+
+    for (i = 0; i < n; i++) {
+        k = (cipher[i] - 'A' - (t[i] - 'A') + 26) % 26;
+        printf("%d ", k);
+    }
+
+    printf("\n");
+    return 0;
+}

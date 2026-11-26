@@ -1,0 +1,39 @@
+#include <stdio.h>
+
+ 
+
+int main(void) {
+
+    puts("ECB mode:");
+
+    puts("A bit error in ciphertext block C1 affects only plaintext P1.");
+
+    puts("Other plaintext blocks are unaffected.");
+
+ 
+
+    puts("\nCBC mode, bit error in transmitted C1:");
+
+    puts("P1 is corrupted unpredictably by block decryption.");
+
+    puts("The corresponding bit positions in P2 are flipped.");
+
+    puts("P3 and later plaintext blocks are unaffected (for ordinary CBC).");
+
+ 
+
+    puts("\nCBC mode, bit error in source plaintext P1 before encryption:");
+
+    puts("The error changes C1 and, through chaining, all later ciphertext blocks.");
+
+    puts("At the receiver, P1 contains the source error; later plaintext blocks");
+
+    puts("normally recover correctly if the modified ciphertext is decrypted");
+
+    puts("as produced by the changed plaintext, absent other transmission errors.");
+
+ 
+
+    return 0;
+
+}

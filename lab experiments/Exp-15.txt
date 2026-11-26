@@ -1,0 +1,101 @@
+
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX 2000
+
+const double english[26] = {
+    8.167, 1.492, 2.782, 4.253, 12.702, 2.228,
+    2.015, 6.094, 6.966, 0.153, 0.772, 4.025,
+    2.406, 6.749, 7.507, 1.929, 0.095, 5.987,
+    6.327, 9.056, 2.758, 0.978, 2.360, 0.150,
+    1.974, 0.074
+};
+
+typedef struct {
+    int shift;
+    double score;
+    char text[MAX];
+} Candidate;
+
+int main(void) {
+    char cipher[MAX];
+    Candidate c[26], temp;
+    int top, n = 0, i, j, k;
+    int count[26];
+    double expected, diff;
+
+    printf("Enter ciphertext: ");
+    if (!fgets(cipher, sizeof(cipher), stdin))
+        return 1;
+
+    printf("How many top plaintexts (1-26)? ");
+    if (scanf("%d", &top) != 1 || top < 1 || top > 26) {
+        printf("Enter a number from 1 to 26.\n");
+        return 1;
+    }
+
+    for (i = 0; cipher[i]; i++)
+        if (isalpha((unsigned char)cipher[i]))
+            n++;
+
+    if (n == 0) {
+        printf("No letters found.\n");
+        return 1;
+    }
+
+    for (k = 0; k < 26; k++) {
+        int pos = 0;
+        double score = 0.0;
+
+        memset(count, 0, sizeof(count));
+
+        for (i = 0; cipher[i]; i++) {
+            if (isalpha((unsigned char)cipher[i])) {
+                int x = toupper((unsigned char)cipher[i]) - 'A';
+                int p = (x - k + 26) % 26;
+
+                c[k].text[pos++] =
+                    islower((unsigned char)cipher[i])
+                    ? (char)('a' + p) : (char)('A' + p);
+
+                count[p]++;
+            } else {
+                c[k].text[pos++] = cipher[i];
+            }
+        }
+        c[k].text[pos] = '\0';
+
+        for (j = 0; j < 26; j++) {
+            expected = n * english[j] / 100.0;
+            diff = count[j] - expected;
+
+            if (expected > 0)
+                score += diff * diff / expected;
+        }
+
+        c[k].shift = k;
+        c[k].score = score;
+    }
+
+    /* Sort by ascending chi-square score */
+    for (i = 0; i < 26; i++) {
+        for (j = i + 1; j < 26; j++) {
+            if (c[j].score < c[i].score) {
+                temp = c[i];
+                c[i] = c[j];
+                c[j] = temp;
+            }
+        }
+    }
+
+    printf("\nTop %d candidate plaintexts:\n", top);
+
+    for (i = 0; i < top; i++) {
+        printf("%d. Shift %d | Score %.2f | %s\n",
+               i + 1, c[i].shift, c[i].score, c[i].text);
+    }
+
+    return 0;
+}

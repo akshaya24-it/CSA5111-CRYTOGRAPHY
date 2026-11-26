@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+long long power(long long a, long long b, long long m) {
+    long long r = 1;
+
+    while (b > 0) {
+        if (b & 1)
+            r = (r * a) % m;
+
+        a = (a * a) % m;
+        b >>= 1;
+    }
+
+    return r;
+}
+
+int inverse(int a, int m) {
+    for (int i = 1; i < m; i++)
+        if ((a * i) % m == 1)
+            return i;
+
+    return -1;
+}
+
+int main() {
+    int p = 23, q = 11, g = 4;
+    int x = 3, y, hash = 7;
+    int k, r, s;
+
+    y = power(g, x, p);
+
+    srand(time(NULL));
+
+    printf("DSA Signatures:\n");
+
+    for (int i = 0; i < 2; i++) {
+        k = rand() % (q - 1) + 1;
+
+        r = power(g, k, p) % q;
+
+        s = (inverse(k, q) * (hash + x * r)) % q;
+
+        printf("Signature %d: (%d, %d)\n", i + 1, r, s);
+    }
+
+    printf("\nRSA Signatures:\n");
+
+    int n = 143, e = 7, d = 103;
+    int message = 9;
+
+    int sig1 = power(message, d, n);
+    int sig2 = power(message, d, n);
+
+    printf("Signature 1: %d\n", sig1);
+    printf("Signature 2: %d\n", sig2);
+
+    printf("\nDSA uses a new random k for each signature.\n");
+    printf("Textbook RSA produces the same signature for the same message.\n");
+
+    return 0;
+}

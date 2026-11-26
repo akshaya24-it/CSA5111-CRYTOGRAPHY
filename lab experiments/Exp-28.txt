@@ -1,0 +1,37 @@
+#include <stdio.h>
+
+long long power(long long a,long long e,long long m) {
+    long long r=1;
+
+    while(e) {
+        if(e&1)
+            r=r*a%m;
+
+        a=a*a%m;
+        e>>=1;
+    }
+
+    return r;
+}
+
+int main() {
+    long long q=23;
+    long long a=5;
+
+    long long xA=6;
+    long long xB=15;
+
+    long long YA=power(a,xA,q);
+    long long YB=power(a,xB,q);
+
+    long long KA=power(YB,xA,q);
+    long long KB=power(YA,xB,q);
+
+    printf("Alice sends: %lld\n",YA);
+    printf("Bob sends: %lld\n",YB);
+
+    printf("Alice shared key: %lld\n",KA);
+    printf("Bob shared key: %lld\n",KB);
+
+    return 0;
+}

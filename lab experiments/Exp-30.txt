@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <string.h>
+#include <openssl/evp.h>
+
+void aes(unsigned char *key,
+         unsigned char *in,
+         unsigned char *out) {
+
+    EVP_CIPHER_CTX *ctx=EVP_CIPHER_CTX_new();
+    int n=0,m=0;
+
+    EVP_EncryptInit_ex(ctx,EVP_aes_128_ecb(),
+                       NULL,key,NULL);
+
+    EVP_CIPHER_CTX_set_padding(ctx,0);
+
+    EVP_EncryptUpdate(ctx,out,&n,in,16);
+    EVP_EncryptFinal_ex(ctx,out+n,&m);
+
+    EVP_CIPHER_CTX_free(ctx);
+}
+
+int main() {
+    unsigned char key[16]="0123456789ABCDEF";
+    unsigned char X[16]="MESSAGE-BLOCK-01";
+
+    unsigned char T[16];
+    unsigned char Y[16];
+    unsigned char state[16];
+    unsigned char tag2[16];
+
+    aes(key,X,T);
+
+    for(int i=0;i<16;i++)
+        Y[i]=X[i]^T[i];
+
+    for(int i=0;i<16;i++)
+        state[i]=Y[i]^T[i];
+
+    aes(key,state,tag2);
+
+    printf("Tags match: %s\n",
+           memcmp(T,tag2,16)==0?"YES":"NO");
+
+    return 0;
+}
